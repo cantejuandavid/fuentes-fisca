@@ -1,0 +1,9 @@
+# Forzar LF en archivos que se ejecutan en Linux (GitHub Actions / Ubuntu)
+* text=auto eol=lf
+*.py   text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+*.sh   text eol=lf
+*.csv  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf

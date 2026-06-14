@@ -13,11 +13,10 @@ de la DIAN y la publica como un CSV estable que puede leerse desde Excel/VBA por
 ## URL raw del CSV (la que consume Excel/VBA)
 
 ```
-https://raw.githubusercontent.com/TU_USUARIO/proveedores-ficticios-dian/main/proveedores_ficticios.csv
+https://raw.githubusercontent.com/cantejuandavid/proveedores-ficticios-dian/main/proveedores_ficticios.csv
 ```
 
-> Reemplaza `TU_USUARIO` por tu usuario de GitHub. Si nombras el repo distinto, ajusta también
-> el nombre del repo en la URL.
+> Esta es la URL fija que consume la macro de Excel/VBA.
 
 ## Archivos publicados
 
@@ -68,10 +67,10 @@ git commit -m "Proyecto inicial: scraper DIAN + GitHub Action"
 git branch -M main
 
 # Opción A) con GitHub CLI (requiere: gh auth login)
-gh repo create TU_USUARIO/proveedores-ficticios-dian --public --source=. --remote=origin --push
+gh repo create cantejuandavid/proveedores-ficticios-dian --public --source=. --remote=origin --push
 
 # Opción B) manual: crea el repo en github.com y luego
-git remote add origin https://github.com/TU_USUARIO/proveedores-ficticios-dian.git
+git remote add origin https://github.com/cantejuandavid/proveedores-ficticios-dian.git
 git push -u origin main
 ```
 
@@ -89,7 +88,7 @@ referencia (no forma parte de este repo):
 ```vba
 Sub CargarProveedoresFicticios()
     Const URL As String = _
-        "https://raw.githubusercontent.com/TU_USUARIO/proveedores-ficticios-dian/main/proveedores_ficticios.csv"
+        "https://raw.githubusercontent.com/cantejuandavid/proveedores-ficticios-dian/main/proveedores_ficticios.csv"
     Dim http As Object, texto As String, lineas() As String, campos() As String
     Dim i As Long, ws As Worksheet
 

@@ -1,0 +1,13 @@
+{
+  "fecha_actualizacion": "2026-06-14T23:30:44.723682+00:00",
+  "url_pdf": "https://www.dian.gov.co/Proveedores_Ficticios/Proveedores-Ficticios-03062026.pdf",
+  "num_registros": 1096,
+  "columnas": [
+    "NIT",
+    "Razon_Social",
+    "Resolucion",
+    "Fecha",
+    "Estado"
+  ],
+  "fuente": "https://www.dian.gov.co/Paginas/Inicio.aspx"
+}

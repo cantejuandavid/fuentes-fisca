@@ -83,8 +83,16 @@ git push -u origin main
 ## Consumo desde Excel/VBA
 
 El CSV mantiene encabezados fijos, separador `;` y UTF-8 para que una macro pueda hacer un
-`GET` a la URL raw, partir por líneas y por `;`, y volcar a una hoja oculta. Ejemplo de
-referencia (no forma parte de este repo):
+`GET` a la URL raw, partir por líneas y por `;`, y volcar a una hoja oculta.
+
+> 📎 **Versión avanzada con fechas:** el módulo [`ejemplo_macro.bas`](ejemplo_macro.bas)
+> carga el CSV y además muestra tres fechas en la hoja oculta (`H1:I4`):
+> *Lista DIAN actualizada al* (de `meta.json`), *Última verificación del robot*
+> (consultando la API de GitHub Actions, **sin generar commits**) y *Consultado por mí el*
+> (`Now()` local). Requiere que el workflow se haya ejecutado al menos una vez en Actions
+> para que exista un run del cual leer la fecha de verificación.
+
+Ejemplo mínimo de referencia (no forma parte del flujo automático):
 
 ```vba
 Sub CargarProveedoresFicticios()

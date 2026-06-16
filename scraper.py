@@ -3,37 +3,30 @@
 """
 scraper.py
 ==========
-Mantiene actualizada la lista oficial de "Proveedores ficticios" de la DIAN.
+Mantiene actualizadas, desde la página de la DIAN, dos listas oficiales:
+  - Proveedores ficticios
+  - Contadores sancionados por la DIAN
 
 Flujo:
-  1. Abre https://www.dian.gov.co/Paginas/Inicio.aspx con Playwright (Chromium headless),
-     porque la página es dinámica (JavaScript) y `requests` no ve el <li>.
-     (Se bloquean imágenes/fuentes/CSS/medios para cargar solo el DOM: más rápido.)
-  2. Localiza el elemento <li data-content="Proveedores ficticios"> y obtiene el href
-     actual del enlace que contiene (la DIAN cambia este enlace en cada actualización).
-  3. Descarga el PDF apuntado por ese enlace.
-  4. Extrae la(s) tabla(s) del PDF con pdfplumber y normaliza las columnas a:
-        NIT ; Razon_Social ; Resolucion ; Fecha ; Estado
-  5. Si los datos cambiaron respecto al CSV actual, escribe en la raíz del repo:
-        - proveedores_ficticios.csv   (UTF-8 con BOM, separador ';', con encabezados)
-        - proveedores_ficticios.json  (UTF-8)
-        - meta.json                   (fecha de actualización, URL del PDF, # de registros)
-     Si NO cambiaron, no reescribe nada (así el commit del workflow es realmente condicional
-     y `meta.json` refleja la última vez que los datos cambiaron de verdad).
+  1. Abre https://www.dian.gov.co/Paginas/Inicio.aspx con Playwright (Chromium headless)
+     UNA sola vez (la página es dinámica; `requests` no ve los <li>). Se bloquean
+     imágenes/fuentes/CSS/medios para cargar solo el DOM (más rápido).
+  2. De cada fuente localiza su <li data-content="..."> y obtiene el href ACTUAL del
+     enlace que contiene (la DIAN cambia estos enlaces en cada actualización).
+  3. Descarga cada PDF.
+  4. Extrae la(s) tabla(s) con pdfplumber y normaliza a las columnas canónicas de la fuente.
+  5. Si los datos cambiaron respecto al CSV actual, escribe los archivos de la fuente
+     (csv UTF-8 BOM con ';', json y meta). Si NO cambiaron, no reescribe nada (commit
+     del workflow realmente condicional; el meta refleja el último cambio real).
 
 Robustez:
-  - La carga de la página y la descarga del PDF se reintentan ante fallos transitorios.
-  - Si NO encuentra el enlace, no puede descargar, o la extracción no supera las
-    validaciones mínimas, el script NO sobrescribe el CSV bueno anterior, registra el
-    error y sale con código != 0.
-  - Escritura atómica: primero genera archivos *.tmp, valida, y solo entonces reemplaza.
+  - La carga de la página y la descarga de cada PDF se reintentan ante fallos transitorios.
+  - Cada fuente se procesa de forma INDEPENDIENTE: si una falla, la otra se actualiza igual;
+    la que falla conserva su última versión válida. El proceso sale con código != 0 si
+    alguna fuente falló.
+  - Escritura atómica: genera *.tmp, valida y solo entonces reemplaza.
 
-Mapeo de columnas (documentado):
-  El PDF de la DIAN suele traer una tabla con columnas en este orden aproximado:
-        NIT | Nombre o razón social | Resolución | Fecha | Estado/Observaciones
-  El parser intenta detectar la fila de encabezado por palabras clave y mapear cada
-  columna a los nombres canónicos. Si no detecta encabezado, asume el orden posicional
-  anterior. Ajusta COLUMN_KEYWORDS / CANONICAL_COLUMNS si la DIAN cambia la estructura.
+Para agregar/ajustar fuentes o columnas, edita la lista FUENTES.
 """
 
 from __future__ import annotations
@@ -53,45 +46,87 @@ from urllib.parse import urljoin
 import requests
 
 # ----------------------------------------------------------------------------
-# Configuración
+# Configuración general
 # ----------------------------------------------------------------------------
 
 DIAN_URL = "https://www.dian.gov.co/Paginas/Inicio.aspx"
-LI_SELECTOR = 'li[data-content="Proveedores ficticios"]'
 
-# Columnas canónicas de salida (orden estable para Excel/VBA).
-CANONICAL_COLUMNS = ["NIT", "Razon_Social", "Resolucion", "Fecha", "Estado"]
-
-# Palabras clave para detectar a qué columna canónica corresponde cada encabezado del PDF.
-COLUMN_KEYWORDS = {
-    "NIT": ["nit", "identificacion", "documento", "cedula"],
-    "Razon_Social": ["razon", "nombre", "social", "contribuyente", "proveedor"],
-    "Resolucion": ["resolucion", "resolución", "acto", "numero", "número"],
-    "Fecha": ["fecha", "ano", "año", "vigencia"],
-    "Estado": ["estado", "observacion", "observación", "situacion", "situación"],
-}
-
-# Recursos que NO necesitamos para hallar el <li> (acelera la carga de la página).
+# Recursos que NO necesitamos para hallar los <li> (acelera la carga de la página).
 RECURSOS_BLOQUEADOS = {"image", "font", "stylesheet", "media"}
-
-# Validaciones mínimas para considerar la extracción exitosa.
-MIN_ROWS = 5            # al menos esta cantidad de filas de datos
-MIN_NIT_LIKE_RATIO = 0.5  # al menos este % de filas con un NIT plausible (dígitos)
 
 # Reintentos ante fallos transitorios (red / render).
 REINTENTOS = 3
 ESPERA_REINTENTO = 4  # segundos entre intentos
 
-# Salidas (en la raíz del repo, junto a este script).
 ROOT = Path(__file__).resolve().parent
-CSV_PATH = ROOT / "proveedores_ficticios.csv"
-JSON_PATH = ROOT / "proveedores_ficticios.json"
-META_PATH = ROOT / "meta.json"
 
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 )
+
+# ----------------------------------------------------------------------------
+# Definición de fuentes (data-driven)
+# ----------------------------------------------------------------------------
+#   nombre        : etiqueta legible (para logs y meta)
+#   li_selector   : selector CSS del <li data-content="...">
+#   csv/json/meta : nombres de archivo de salida (en la raíz del repo)
+#   columnas      : columnas canónicas del CSV (orden estable para Excel/VBA)
+#   keywords      : por columna canónica, palabras clave para mapear el encabezado del PDF.
+#                   El match es por igualdad normalizada o por subcadena (solo si la
+#                   palabra tiene >= 4 letras, para evitar falsos positivos como "no").
+#   requeridas    : columnas que deben reconocerse para aceptar una fila de encabezado
+#                   (y para no descartar una fila de datos).
+#   col_id        : columna identificadora que debe verse "numérica" en la validación.
+#   min_filas     : mínimo de filas de datos para aceptar la extracción.
+#   min_id_ratio  : mínimo de filas cuyo col_id parece un número (dígitos).
+FUENTES = [
+    {
+        "nombre": "Proveedores ficticios",
+        "li_selector": 'li[data-content="Proveedores ficticios"]',
+        "csv": "proveedores_ficticios.csv",
+        "json": "proveedores_ficticios.json",
+        "meta": "meta.json",  # se conserva el nombre histórico (compatibilidad con la macro)
+        "columnas": ["NIT", "Razon_Social", "Resolucion", "Fecha", "Estado"],
+        "keywords": {
+            "NIT": ["nit", "identificacion", "documento", "cedula"],
+            "Razon_Social": ["razon", "nombre", "social", "contribuyente", "proveedor"],
+            "Resolucion": ["resolucion", "acto"],
+            "Fecha": ["fecha", "ano", "vigencia"],
+            "Estado": ["estado", "observacion", "situacion"],
+        },
+        "requeridas": ["NIT", "Razon_Social"],
+        "col_id": "NIT",
+        "min_filas": 5,
+        "min_id_ratio": 0.5,
+    },
+    {
+        "nombre": "Contadores sancionados por la DIAN",
+        "li_selector": 'li[data-content="Contadores sancionados por la DIAN"]',
+        "csv": "contadores_sancionados.csv",
+        "json": "contadores_sancionados.json",
+        "meta": "contadores_sancionados.meta.json",
+        "columnas": [
+            "No", "Nombre", "Cedula", "Inscripcion_Profesional", "Resolucion",
+            "Sancion", "Fecha_Ejecutoria", "Vencimiento", "Autoridad",
+        ],
+        "keywords": {
+            "No": ["no", "num", "numero", "item"],
+            "Nombre": ["nombre"],
+            "Cedula": ["cedula", "identificacion", "documento"],
+            "Inscripcion_Profesional": ["inscripcion", "profesional", "tarjeta"],
+            "Resolucion": ["resolucion", "acto"],
+            "Sancion": ["sancion"],
+            "Fecha_Ejecutoria": ["ejecutoria", "fecha"],
+            "Vencimiento": ["vencimiento", "vence"],
+            "Autoridad": ["autoridad", "sanciona", "entidad"],
+        },
+        "requeridas": ["Cedula", "Nombre"],
+        "col_id": "Cedula",
+        "min_filas": 3,
+        "min_id_ratio": 0.5,
+    },
+]
 
 logging.basicConfig(
     level=logging.INFO,
@@ -102,7 +137,7 @@ log = logging.getLogger("dian-scraper")
 
 
 class ScraperError(Exception):
-    """Error controlado: aborta sin sobrescribir los datos buenos."""
+    """Error controlado: aborta la fuente sin sobrescribir sus datos buenos."""
 
 
 def _reintentar(fn, *, descripcion: str, intentos: int = REINTENTOS, espera: int = ESPERA_REINTENTO):
@@ -123,21 +158,15 @@ def _reintentar(fn, *, descripcion: str, intentos: int = REINTENTOS, espera: int
 
 
 # ----------------------------------------------------------------------------
-# Paso 1-2: obtener el enlace actual del PDF con Playwright
+# Paso 1-2: obtener los enlaces actuales (una sola carga de página)
 # ----------------------------------------------------------------------------
 
-def _extraer_href(page) -> str:
-    """Navega a la página de la DIAN y devuelve la URL absoluta del PDF."""
-    page.goto(DIAN_URL, wait_until="domcontentloaded", timeout=60_000)
-
-    # El <li> lo inyecta JS; esperamos a que aparezca (no a 'networkidle').
-    page.wait_for_selector(LI_SELECTOR, timeout=30_000)
-
-    li = page.locator(LI_SELECTOR).first
+def _href_de(page, selector: str) -> str | None:
+    """Devuelve la URL absoluta del enlace dentro del <li> indicado, o None."""
+    li = page.locator(selector).first
     if li.count() == 0:
-        raise ScraperError(f"No se encontró el elemento {LI_SELECTOR} en la página.")
+        return None
 
-    # El enlace puede estar en un <a> hijo, en atributos data-* o embebido en el HTML.
     href = None
     anchor = li.locator("a[href]").first
     if anchor.count() > 0:
@@ -157,22 +186,20 @@ def _extraer_href(page) -> str:
             href = m.group(1)
 
     if not href:
-        raise ScraperError("Se encontró el <li> pero no se pudo extraer ningún enlace (href).")
-
+        return None
     return urljoin(page.url, href.strip())
 
 
-def obtener_url_pdf() -> str:
-    """Renderiza la página de la DIAN (con reintentos) y devuelve la URL del PDF."""
+def obtener_urls(fuentes: list[dict]) -> dict[str, str | None]:
+    """Carga la página de la DIAN una sola vez y devuelve {nombre_fuente: url_pdf|None}."""
     from playwright.sync_api import sync_playwright
 
     log.info("Abriendo %s con Playwright...", DIAN_URL)
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         try:
-            def intento() -> str:
+            def intento() -> dict[str, str | None]:
                 context = browser.new_context(user_agent=USER_AGENT, locale="es-CO")
-                # Bloquear recursos pesados e innecesarios para acelerar la carga.
                 context.route(
                     "**/*",
                     lambda route: (
@@ -183,23 +210,33 @@ def obtener_url_pdf() -> str:
                 )
                 page = context.new_page()
                 try:
-                    return _extraer_href(page)
+                    page.goto(DIAN_URL, wait_until="domcontentloaded", timeout=60_000)
+                    urls: dict[str, str | None] = {}
+                    for f in fuentes:
+                        sel = f["li_selector"]
+                        try:
+                            page.wait_for_selector(sel, timeout=30_000)
+                        except Exception:
+                            log.warning("No apareció el selector de '%s' (%s).", f["nombre"], sel)
+                        urls[f["nombre"]] = _href_de(page, sel)
+                    return urls
                 finally:
                     context.close()
 
-            url_abs = _reintentar(intento, descripcion="cargar la página de la DIAN")
-            log.info("Enlace de proveedores ficticios: %s", url_abs)
-            return url_abs
+            urls = _reintentar(intento, descripcion="cargar la página de la DIAN")
+            for nombre, url in urls.items():
+                log.info("Enlace [%s]: %s", nombre, url or "NO ENCONTRADO")
+            return urls
         finally:
             browser.close()
 
 
 # ----------------------------------------------------------------------------
-# Paso 3: descargar el PDF
+# Paso 3: descargar un PDF
 # ----------------------------------------------------------------------------
 
 def descargar_pdf(url: str) -> bytes:
-    log.info("Descargando PDF...")
+    log.info("Descargando PDF: %s", url)
     headers = {"User-Agent": USER_AGENT, "Accept": "application/pdf,*/*"}
 
     def intento() -> bytes:
@@ -225,30 +262,36 @@ def descargar_pdf(url: str) -> bytes:
 # ----------------------------------------------------------------------------
 
 def _norm(s: str) -> str:
-    """Minúsculas, sin acentos, sin espacios extra: para comparar encabezados."""
+    """Minúsculas, sin acentos ni puntuación, sin espacios extra (para comparar encabezados)."""
     s = (s or "").strip().lower()
     s = "".join(
         c for c in unicodedata.normalize("NFD", s) if unicodedata.category(c) != "Mn"
     )
-    return re.sub(r"\s+", " ", s)
+    s = re.sub(r"[^a-z0-9 ]", " ", s)
+    return re.sub(r"\s+", " ", s).strip()
 
 
-def _mapear_encabezado(headers: list[str]) -> dict[int, str] | None:
-    """Dado el contenido de una fila candidata a encabezado, devuelve
-    {indice_columna -> nombre_canonico} si reconoce al menos NIT y Razon_Social."""
+def _coincide(h: str, kw: str) -> bool:
+    """True si el encabezado `h` corresponde a la palabra clave `kw`.
+    Igualdad normalizada, o subcadena solo si kw tiene >= 4 letras (evita 'no' en 'nombre')."""
+    return h == kw or (len(kw) >= 4 and kw in h)
+
+
+def _mapear_encabezado(headers: list[str], keywords: dict[str, list[str]],
+                       requeridas: list[str]) -> dict[int, str] | None:
+    """Devuelve {indice_columna -> nombre_canonico} si reconoce todas las `requeridas`."""
     mapeo: dict[int, str] = {}
     for idx, raw in enumerate(headers):
         h = _norm(raw)
         if not h:
             continue
-        for canon, kws in COLUMN_KEYWORDS.items():
+        for canon, kws in keywords.items():
             if canon in mapeo.values():
                 continue
-            if any(kw in h for kw in kws):
+            if any(_coincide(h, kw) for kw in kws):
                 mapeo[idx] = canon
                 break
-    # Consideramos válido el encabezado si reconocemos al menos NIT y Razon_Social.
-    if "NIT" in mapeo.values() and "Razon_Social" in mapeo.values():
+    if all(col in mapeo.values() for col in requeridas):
         return mapeo
     return None
 
@@ -259,19 +302,22 @@ def _limpiar(celda) -> str:
     return re.sub(r"\s+", " ", str(celda)).strip()
 
 
-def _parece_nit(valor: str) -> bool:
-    digitos = re.sub(r"\D", "", valor or "")
-    return len(digitos) >= 5  # NIT colombiano: típicamente 8-10 dígitos
+def _parece_id(valor: str) -> bool:
+    return len(re.sub(r"\D", "", valor or "")) >= 5
 
 
-def extraer_tabla(pdf_bytes: bytes) -> list[dict]:
-    """Extrae filas de todas las tablas del PDF y las normaliza a CANONICAL_COLUMNS."""
+def extraer_tabla(pdf_bytes: bytes, fuente: dict) -> list[dict]:
+    """Extrae filas de todas las tablas del PDF y las normaliza a las columnas de la fuente."""
     import pdfplumber
+
+    columnas = fuente["columnas"]
+    keywords = fuente["keywords"]
+    requeridas = fuente["requeridas"]
 
     registros: list[dict] = []
     mapeo_global: dict[int, str] | None = None
 
-    log.info("Extrayendo tablas con pdfplumber...")
+    log.info("[%s] Extrayendo tablas con pdfplumber...", fuente["nombre"])
     with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
         for pnum, page in enumerate(pdf.pages, start=1):
             tablas = page.extract_tables() or []
@@ -279,65 +325,72 @@ def extraer_tabla(pdf_bytes: bytes) -> list[dict]:
                 if not tabla:
                     continue
                 inicio = 0
-                # Intentar detectar encabezado en la primera fila de la tabla.
-                posible = _mapear_encabezado([_limpiar(c) for c in tabla[0]])
+                posible = _mapear_encabezado(
+                    [_limpiar(c) for c in tabla[0]], keywords, requeridas
+                )
                 if posible:
                     mapeo_global = posible
                     inicio = 1
 
-                # Mapeo a usar: el detectado o, en su defecto, posicional.
                 mapeo = mapeo_global
                 for fila in tabla[inicio:]:
                     celdas = [_limpiar(c) for c in fila]
                     if not any(celdas):
                         continue
 
-                    reg = {col: "" for col in CANONICAL_COLUMNS}
+                    reg = {col: "" for col in columnas}
                     if mapeo:
                         for idx, canon in mapeo.items():
                             if idx < len(celdas):
                                 reg[canon] = celdas[idx]
                     else:
-                        # Fallback posicional: NIT, Razon_Social, Resolucion, Fecha, Estado
-                        for i, canon in enumerate(CANONICAL_COLUMNS):
+                        # Fallback posicional: usa el orden de `columnas`.
+                        for i, canon in enumerate(columnas):
                             if i < len(celdas):
                                 reg[canon] = celdas[i]
 
-                    # Descartar filas claramente no-datos (sin NIT plausible y sin nombre).
-                    if not reg["NIT"] and not reg["Razon_Social"]:
+                    # Descartar filas no-datos: todas las columnas requeridas vacías.
+                    if all(not reg.get(c) for c in requeridas):
                         continue
                     registros.append(reg)
 
-            log.info("Página %d procesada (%d registros acumulados).", pnum, len(registros))
+            log.info("[%s] Página %d procesada (%d registros).",
+                     fuente["nombre"], pnum, len(registros))
 
     return registros
 
 
-def validar(registros: list[dict]) -> None:
-    if len(registros) < MIN_ROWS:
+def validar(registros: list[dict], fuente: dict) -> None:
+    nombre = fuente["nombre"]
+    min_filas = fuente["min_filas"]
+    col_id = fuente["col_id"]
+    min_ratio = fuente["min_id_ratio"]
+
+    if len(registros) < min_filas:
         raise ScraperError(
-            f"Se extrajeron muy pocas filas ({len(registros)} < {MIN_ROWS}). "
+            f"Se extrajeron muy pocas filas ({len(registros)} < {min_filas}). "
             "Posible cambio de estructura del PDF; se conserva la versión anterior."
         )
-    con_nit = sum(1 for r in registros if _parece_nit(r.get("NIT", "")))
-    ratio = con_nit / len(registros)
-    if ratio < MIN_NIT_LIKE_RATIO:
+    con_id = sum(1 for r in registros if _parece_id(r.get(col_id, "")))
+    ratio = con_id / len(registros)
+    if ratio < min_ratio:
         raise ScraperError(
-            f"Solo {ratio:.0%} de las filas tienen un NIT plausible "
-            f"(mínimo {MIN_NIT_LIKE_RATIO:.0%}). Se conserva la versión anterior."
+            f"Solo {ratio:.0%} de las filas tienen '{col_id}' plausible "
+            f"(mínimo {min_ratio:.0%}). Se conserva la versión anterior."
         )
-    log.info("Validación OK: %d filas, %.0f%% con NIT plausible.", len(registros), ratio * 100)
+    log.info("[%s] Validación OK: %d filas, %.0f%% con '%s' plausible.",
+             nombre, len(registros), ratio * 100, col_id)
 
 
 # ----------------------------------------------------------------------------
 # Paso 5: escribir salidas (atómico y solo si cambiaron los datos)
 # ----------------------------------------------------------------------------
 
-def _csv_str(registros: list[dict]) -> str:
+def _csv_str(registros: list[dict], columnas: list[str]) -> str:
     """Serializa los registros a CSV (separador ';', salto '\\n' determinista)."""
     buf = io.StringIO()
     writer = csv.DictWriter(
-        buf, fieldnames=CANONICAL_COLUMNS, delimiter=";",
+        buf, fieldnames=columnas, delimiter=";",
         extrasaction="ignore", lineterminator="\n",
     )
     writer.writeheader()
@@ -345,47 +398,52 @@ def _csv_str(registros: list[dict]) -> str:
     return buf.getvalue()
 
 
-def escribir_salidas(registros: list[dict], url_pdf: str) -> bool:
-    """Escribe CSV/JSON/meta solo si el CSV cambió. Devuelve True si hubo cambios."""
-    nuevo_csv = _csv_str(registros)
+def escribir_salidas(registros: list[dict], url_pdf: str, fuente: dict) -> bool:
+    """Escribe CSV/JSON/meta de la fuente solo si el CSV cambió. Devuelve True si hubo cambios."""
+    columnas = fuente["columnas"]
+    csv_path = ROOT / fuente["csv"]
+    json_path = ROOT / fuente["json"]
+    meta_path = ROOT / fuente["meta"]
 
-    # Comparar con el CSV actual (utf-8-sig descarta el BOM al leer).
-    if CSV_PATH.exists():
+    nuevo_csv = _csv_str(registros, columnas)
+
+    if csv_path.exists():
         try:
-            actual = CSV_PATH.read_text(encoding="utf-8-sig")
+            actual = csv_path.read_text(encoding="utf-8-sig")
         except OSError:
             actual = None
         if actual == nuevo_csv:
-            log.info("Datos idénticos al CSV actual (%d filas): no se reescribe nada.",
-                     len(registros))
+            log.info("[%s] Datos idénticos al CSV actual (%d filas): no se reescribe nada.",
+                     fuente["nombre"], len(registros))
             return False
 
-    # CSV con BOM (UTF-8) para que Excel reconozca acentos; salto '\n' (ver .gitattributes).
-    tmp_csv = CSV_PATH.with_suffix(".csv.tmp")
+    # CSV con BOM (UTF-8) para Excel; salto '\n' (ver .gitattributes).
+    tmp_csv = csv_path.with_suffix(csv_path.suffix + ".tmp")
     tmp_csv.write_text(nuevo_csv, encoding="utf-8-sig", newline="")
 
-    tmp_json = JSON_PATH.with_suffix(".json.tmp")
+    tmp_json = json_path.with_suffix(json_path.suffix + ".tmp")
     tmp_json.write_text(
         json.dumps(registros, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
     )
 
     meta = {
+        "fuente": fuente["nombre"],
         "fecha_actualizacion": datetime.now(timezone.utc).isoformat(),
         "url_pdf": url_pdf,
         "num_registros": len(registros),
-        "columnas": CANONICAL_COLUMNS,
-        "fuente": DIAN_URL,
+        "columnas": columnas,
+        "pagina": DIAN_URL,
     }
-    tmp_meta = META_PATH.with_suffix(".json.tmp")
+    tmp_meta = meta_path.with_suffix(meta_path.suffix + ".tmp")
     tmp_meta.write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8", newline="\n"
     )
 
-    # Reemplazo atómico solo cuando todo se generó bien.
-    tmp_csv.replace(CSV_PATH)
-    tmp_json.replace(JSON_PATH)
-    tmp_meta.replace(META_PATH)
-    log.info("Archivos actualizados: %s, %s, %s", CSV_PATH.name, JSON_PATH.name, META_PATH.name)
+    tmp_csv.replace(csv_path)
+    tmp_json.replace(json_path)
+    tmp_meta.replace(meta_path)
+    log.info("[%s] Archivos actualizados: %s, %s, %s",
+             fuente["nombre"], csv_path.name, json_path.name, meta_path.name)
     return True
 
 
@@ -393,26 +451,42 @@ def escribir_salidas(registros: list[dict], url_pdf: str) -> bool:
 # main
 # ----------------------------------------------------------------------------
 
+def procesar_fuente(fuente: dict, url: str | None) -> bool:
+    """Procesa una fuente. Devuelve True si todo fue bien; False si falló (controladamente)."""
+    nombre = fuente["nombre"]
+    try:
+        if not url:
+            raise ScraperError(f"No se encontró el enlace de '{nombre}' en la página.")
+        pdf = descargar_pdf(url)
+        registros = extraer_tabla(pdf, fuente)
+        validar(registros, fuente)
+        cambio = escribir_salidas(registros, url, fuente)
+        log.info("[%s] %s (%d registros).",
+                 nombre, "ACTUALIZADO" if cambio else "sin cambios", len(registros))
+        return True
+    except ScraperError as e:
+        log.error("[%s] Fallo controlado: %s", nombre, e)
+    except Exception as e:  # noqa: BLE001
+        log.exception("[%s] Fallo inesperado: %s", nombre, e)
+    log.error("[%s] Se conserva la última versión válida (no se sobrescribió).", nombre)
+    return False
+
+
 def main() -> int:
     try:
-        url_pdf = obtener_url_pdf()
-        pdf_bytes = descargar_pdf(url_pdf)
-        registros = extraer_tabla(pdf_bytes)
-        validar(registros)
-        cambiaron = escribir_salidas(registros, url_pdf)
-        if cambiaron:
-            log.info("Proceso completado: datos actualizados (%d registros).", len(registros))
-        else:
-            log.info("Proceso completado: sin cambios (%d registros).", len(registros))
-        return 0
-    except ScraperError as e:
-        log.error("Fallo controlado: %s", e)
-        log.error("Se conserva la última versión válida del CSV (no se sobrescribió).")
-        return 2
+        urls = obtener_urls(FUENTES)
     except Exception as e:  # noqa: BLE001
-        log.exception("Fallo inesperado: %s", e)
-        log.error("Se conserva la última versión válida del CSV (no se sobrescribió).")
+        log.exception("No se pudo cargar la página de la DIAN: %s", e)
+        log.error("Se conservan todas las versiones válidas anteriores.")
         return 1
+
+    fallidas = [f["nombre"] for f in FUENTES if not procesar_fuente(f, urls.get(f["nombre"]))]
+
+    if fallidas:
+        log.error("Fuentes con error: %s.", ", ".join(fallidas))
+        return 2
+    log.info("Proceso completado: todas las fuentes OK.")
+    return 0
 
 
 if __name__ == "__main__":

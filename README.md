@@ -1,23 +1,28 @@
-# Proveedores ficticios DIAN — actualización automática
+# Listas DIAN — actualización automática
 
-Mantiene actualizada, de forma automática, la lista oficial de **Proveedores ficticios**
-de la DIAN y la publica como un CSV estable que puede leerse desde Excel/VBA por una URL fija.
+Mantiene actualizadas, de forma automática, dos listas oficiales de la DIAN y las publica
+como CSV estables que pueden leerse desde Excel/VBA por una URL fija:
+
+1. **Proveedores ficticios**
+2. **Contadores sancionados por la DIAN**
 
 - Fuente oficial: https://www.dian.gov.co/Paginas/Inicio.aspx
-- El script ([`scraper.py`](scraper.py)) renderiza la página con Playwright, localiza el
-  `<li data-content="Proveedores ficticios">`, resuelve el enlace **actual** del PDF
+- El script ([`scraper.py`](scraper.py)) renderiza la página con Playwright **una sola vez**,
+  localiza el `<li data-content="...">` de cada lista, resuelve el enlace **actual** de su PDF
   (cambia cada vez que la DIAN actualiza), descarga el PDF y extrae la tabla con `pdfplumber`.
+- Cada lista se procesa de forma **independiente**: si una falla, la otra se actualiza igual.
 - Un GitHub Action programado ([`.github/workflows/actualizar.yml`](.github/workflows/actualizar.yml))
   lo ejecuta dos veces por semana (lunes y jueves) y manualmente cuando quieras, y commitea
   los archivos solo si cambian.
 
-## URL raw del CSV (la que consume Excel/VBA)
+## URLs raw de los CSV (las que consume Excel/VBA)
 
 ```
 https://raw.githubusercontent.com/cantejuandavid/proveedores-ficticios-dian/main/proveedores_ficticios.csv
+https://raw.githubusercontent.com/cantejuandavid/proveedores-ficticios-dian/main/contadores_sancionados.csv
 ```
 
-> Esta es la URL fija que consume la macro de Excel/VBA.
+> Son las URLs fijas que consumen las macros de Excel/VBA.
 
 ## Archivos publicados
 
@@ -25,18 +30,25 @@ https://raw.githubusercontent.com/cantejuandavid/proveedores-ficticios-dian/main
 |---|---|
 | `proveedores_ficticios.csv` | UTF-8 (con BOM), separador `;`, con encabezados. **Estructura estable.** |
 | `proveedores_ficticios.json` | Mismos datos en JSON. |
-| `meta.json` | Fecha de actualización, URL del PDF usada y número de registros. |
+| `meta.json` | Meta de proveedores: fecha de actualización, URL del PDF y número de registros. |
+| `contadores_sancionados.csv` | UTF-8 (con BOM), separador `;`, con encabezados. **Estructura estable.** |
+| `contadores_sancionados.json` | Mismos datos en JSON. |
+| `contadores_sancionados.meta.json` | Meta de contadores: fecha de actualización, URL del PDF y número de registros. |
 
-### Estructura fija del CSV
+### Estructura fija de los CSV
 
 ```
+# proveedores_ficticios.csv
 NIT;Razon_Social;Resolucion;Fecha;Estado
+
+# contadores_sancionados.csv
+No;Nombre;Cedula;Inscripcion_Profesional;Resolucion;Sancion;Fecha_Ejecutoria;Vencimiento;Autoridad
 ```
 
-El mapeo de columnas del PDF a estos nombres canónicos está documentado en el encabezado de
-[`scraper.py`](scraper.py). El parser intenta detectar la fila de encabezado del PDF por
-palabras clave; si no lo logra, asume el orden posicional anterior. Si la DIAN cambia la
-estructura del PDF, ajusta `COLUMN_KEYWORDS` / `CANONICAL_COLUMNS` en el script.
+El mapeo de columnas del PDF a estos nombres canónicos está definido por fuente en la lista
+`FUENTES` de [`scraper.py`](scraper.py). El parser detecta la fila de encabezado del PDF por
+palabras clave; si no lo logra, asume el orden posicional. Si la DIAN cambia la estructura de
+algún PDF, ajusta esa fuente en `FUENTES` (columnas / keywords).
 
 ## Robustez
 

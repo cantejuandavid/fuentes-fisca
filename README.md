@@ -15,6 +15,21 @@ como CSV estables que pueden leerse desde Excel/VBA por una URL fija:
   lo ejecuta dos veces por semana (lunes y jueves) y manualmente cuando quieras, y commitea
   los archivos solo si cambian.
 
+## Propósito y aviso
+
+Este proyecto tiene **fines exclusivamente académicos y de apoyo a la comunidad contable y
+tributaria**. Su único objetivo es facilitar el acceso a información **pública** que la DIAN ya
+publica en su página oficial —las listas de **Proveedores ficticios** y de **Contadores
+sancionados por la DIAN**—, de modo que sirva como **ayuda para la toma de decisiones**.
+
+- No persigue ningún fin comercial, ni distinto al de consultar y consolidar esa información pública.
+- No modifica, interpreta ni certifica los datos: solo reproduce lo que la DIAN publica en sus PDF.
+- La **fuente oficial y única válida** sigue siendo la DIAN
+  (https://www.dian.gov.co/Paginas/Inicio.aspx). Ante cualquier diferencia, prevalece la
+  publicación oficial.
+- Los datos pueden contener errores de extracción o estar desactualizados respecto a la fuente;
+  verifica siempre contra el PDF oficial antes de tomar decisiones con efectos legales.
+
 ## URLs raw de los CSV (las que consume Excel/VBA)
 
 ```

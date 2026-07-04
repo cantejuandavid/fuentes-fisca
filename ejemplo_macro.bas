@@ -10,7 +10,14 @@ Attribute VB_Name = "ProveedoresFicticiosDIAN"
 '    3) "Consultado por mi el"       -> Now() local (cuando TU corriste esta macro).
 '
 '  Pegar este modulo en el editor de VBA (Alt+F11) del libro consumidor.
-'  Las fechas quedan en H1:I4 de la hoja oculta "ProveedoresFicticios".
+'  Datos en columnas A:E (texto plano); panel de fechas en K1:L4.
+'
+'  NOTAS DE SEGURIDAD DE DATOS:
+'   - Las celdas de datos se formatean como TEXTO ("@") ANTES de volcar: evita que
+'     Excel reinterprete fechas ("3/09/2014" NO se convierte al formato regional) y
+'     que un valor que empiece por '=', '+', '-' o '@' se ejecute como formula.
+'   - Si adaptas esta macro a otro CSV del repo (contadores tiene 9 columnas A:I),
+'     ajusta RANGO_DATOS y recuerda que el panel va en K:L para no pisar datos.
 ' =====================================================================================
 Option Explicit
 
@@ -23,6 +30,7 @@ Private Const URL_RUNS As String = _
     "https://api.github.com/repos/cantejuandavid/proveedores-ficticios-dian/actions/workflows/actualizar.yml/runs?status=success&per_page=1"
 
 Private Const NOMBRE_HOJA As String = "ProveedoresFicticios"
+Private Const RANGO_DATOS As String = "A:E"        ' columnas del CSV (proveedores = 5)
 Private Const OFFSET_UTC_COLOMBIA As Double = -5   ' Colombia = UTC-5 (sin horario de verano)
 
 
@@ -31,8 +39,11 @@ Public Sub CargarProveedoresFicticios()
     Set ws = ObtenerHojaOculta()
     ws.Cells.Clear
 
+    ' Formatear como TEXTO antes de volcar (ver notas de seguridad arriba).
+    ws.Columns(RANGO_DATOS).NumberFormat = "@"
+
     ' ---------------------------------------------------------------------------------
-    ' 1) Descargar y volcar el CSV (columnas A:E, fila 1 = encabezados)
+    ' 1) Descargar y volcar el CSV (fila 1 = encabezados)
     ' ---------------------------------------------------------------------------------
     Dim texto As String
     texto = HttpGet(URL_CSV, False)   ' False = no es API de GitHub
@@ -75,30 +86,30 @@ Public Sub CargarProveedoresFicticios()
     ultimaVerificacion = IsoUtcToLocal(ExtraerCampoJSON(runsTxt, "run_started_at"))
 
     ' ---------------------------------------------------------------------------------
-    ' 4) Escribir el panel de fechas en H1:I4 (no estorba a los datos A:E)
+    ' 4) Panel de fechas en K1:L4 (lejos de los datos; contadores llega hasta la col. I)
     ' ---------------------------------------------------------------------------------
-    ws.Range("H1").Value = "Lista DIAN actualizada al"
-    ws.Range("H2").Value = "Ultima verificacion robot"
-    ws.Range("H3").Value = "Consultado por mi el"
-    ws.Range("H4").Value = "Registros"
+    ws.Range("K1").Value = "Lista DIAN actualizada al"
+    ws.Range("K2").Value = "Ultima verificacion robot"
+    ws.Range("K3").Value = "Consultado por mi el"
+    ws.Range("K4").Value = "Registros"
 
     If IsNull(fechaActualizacion) Then
-        ws.Range("I1").Value = "n/d"
+        ws.Range("L1").Value = "n/d"
     Else
-        ws.Range("I1").Value = fechaActualizacion
-        ws.Range("I1").NumberFormat = "dd/mm/yyyy hh:mm"
+        ws.Range("L1").Value = fechaActualizacion
+        ws.Range("L1").NumberFormat = "dd/mm/yyyy hh:mm"
     End If
 
     If IsNull(ultimaVerificacion) Then
-        ws.Range("I2").Value = "n/d"
+        ws.Range("L2").Value = "n/d"
     Else
-        ws.Range("I2").Value = ultimaVerificacion
-        ws.Range("I2").NumberFormat = "dd/mm/yyyy hh:mm"
+        ws.Range("L2").Value = ultimaVerificacion
+        ws.Range("L2").NumberFormat = "dd/mm/yyyy hh:mm"
     End If
 
-    ws.Range("I3").Value = Now
-    ws.Range("I3").NumberFormat = "dd/mm/yyyy hh:mm"
-    ws.Range("I4").Value = fila - 1   ' menos la fila de encabezados
+    ws.Range("L3").Value = Now
+    ws.Range("L3").NumberFormat = "dd/mm/yyyy hh:mm"
+    ws.Range("L4").Value = fila - 1   ' menos la fila de encabezados
 End Sub
 
 
@@ -112,6 +123,10 @@ Private Function HttpGet(ByVal url As String, ByVal esApiGitHub As Boolean) As S
     On Error GoTo fallo
     Dim http As Object
     Set http = CreateObject("MSXML2.ServerXMLHTTP.6.0")
+
+    ' Timeouts (ms): resolver DNS, conectar, enviar, recibir. Sin esto una llamada
+    ' sincrona puede congelar Excel varios minutos si el host no responde.
+    http.setTimeouts 5000, 10000, 10000, 30000
 
     Dim urlFinal As String
     If esApiGitHub Then

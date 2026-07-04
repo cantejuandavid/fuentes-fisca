@@ -1,3 +1,6 @@
-playwright>=1.44
-pdfplumber>=0.11
-requests>=2.31
+# Versiones fijadas: (a) CI reproducible (no se rompe porque salga una versión nueva un
+# lunes) y (b) la caché de Chromium del workflow usa el hash de este archivo como key,
+# así que un upgrade de playwright DEBE cambiar este archivo para renovar la caché.
+playwright==1.60.0
+pdfplumber==0.11.10
+requests==2.34.2

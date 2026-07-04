@@ -1,4 +1,4 @@
-name: Actualizar proveedores ficticios DIAN
+name: Actualizar listas DIAN
 
 on:
   schedule:
@@ -6,9 +6,9 @@ on:
     - cron: "0 11 * * 1,4"
   workflow_dispatch: {}
 
-# Permite al GITHUB_TOKEN hacer commit/push de los archivos generados.
 permissions:
-  contents: write
+  contents: write   # commit/push de los archivos generados
+  actions: write    # re-habilitar el propio workflow (keep-alive del cron)
 
 concurrency:
   group: actualizar-dian
@@ -17,6 +17,7 @@ concurrency:
 jobs:
   actualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -44,7 +45,11 @@ jobs:
       - name: Instalar Chromium (omite la descarga si está en caché)
         run: python -m playwright install chromium
 
+      # continue-on-error: si UNA fuente falla, el run continúa para commitear las
+      # fuentes que SÍ se actualizaron. El paso final re-propaga el fallo.
       - name: Ejecutar scraper
+        id: scraper
+        continue-on-error: true
         run: python scraper.py
 
       - name: Commit y push si hubo cambios
@@ -57,6 +62,29 @@ jobs:
           if git diff --staged --quiet; then
             echo "Sin cambios: nada que commitear."
           else
-            git commit -m "Actualizar proveedores ficticios DIAN ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            archivos=$(git diff --staged --name-only | tr '\n' ' ')
+            git commit -m "Actualizar listas DIAN ($(date -u +'%Y-%m-%d %H:%M UTC'))" \
+                       -m "Archivos: ${archivos}"
+            git pull --rebase origin main
             git push
           fi
+
+      # GitHub desactiva los workflows con `schedule` tras ~60 días sin actividad en el
+      # repo. Como solo commiteamos cuando la DIAN cambia algo, puede no haber actividad
+      # por meses; este paso re-habilita el workflow en cada corrida para resetear ese
+      # contador y que el cron nunca muera en silencio.
+      - name: Mantener activo el cron (keep-alive)
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method PUT \
+            "repos/${{ github.repository }}/actions/workflows/actualizar.yml/enable" \
+            && echo "Workflow re-habilitado (keep-alive OK)." \
+            || echo "Keep-alive falló (no crítico)."
+
+      - name: Propagar fallo del scraper
+        if: steps.scraper.outcome == 'failure'
+        run: |
+          echo "::error::El scraper terminó con error en al menos una fuente (las demás sí se commitearon)."
+          exit 1

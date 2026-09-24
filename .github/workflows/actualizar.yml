@@ -63,6 +63,9 @@ jobs:
             echo "Sin cambios: nada que commitear."
           else
             archivos=$(git diff --staged --name-only | tr '\n' ' ')
+            # FiscaHUB lee este sello al abrir para avisar que hay fuentes nuevas (b1967)
+            date -u +'%Y-%m-%d %H:%M' > fuentes_version.txt
+            git add fuentes_version.txt
             git commit -m "Actualizar listas DIAN ($(date -u +'%Y-%m-%d %H:%M UTC'))" \
                        -m "Archivos: ${archivos}"
             git pull --rebase origin main

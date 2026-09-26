@@ -1,0 +1,12 @@
+ORDEN;GRUPO;PATRON;NOTA
+1;IVADESC;_iva_+devolucion+compra|impuesto al consumo+devolucion+compra|impoconsumo+devolucion+compra;Devolucion de compras: reduce el IVA descontable
+2;IVAGEN;_iva_+devolucion+venta|impuesto al consumo+devolucion+venta|impoconsumo+devolucion+venta;Devolucion de ventas: reduce el IVA generado
+3;IVADESC;_iva_+descontable|_iva_+pagado|impuesto al consumo+descontable|impuesto al consumo+pagado|impoconsumo+descontable|impoconsumo+pagado;IVA descontable
+4;IVAGEN;_iva_|impuesto al consumo|impoconsumo;El resto del IVA y del impuesto al consumo: generado
+5;RET;_rte|retencion|rtefte|reteica|autorretencion|rteiva;Retenciones
+6;TERR;_ica_|industria y comercio|predial|vehiculo|catastral|autoavaluo;Impuestos territoriales
+7;PAS;por pagar|pasivo;Pasivos
+8;ACT;por cobrar|patrimonial|acciones|aporte|inversion|_cdt;Activos
+9;FIN;saldo|consignacion|movimiento|tarjeta|gravamen|mediana|promedio|_credito_|_debito_;Movimientos financieros
+10;ING;ingreso|venta|enajenacion|dividendo|participacion|rendimiento;Ingresos
+11;PAG;pago|abono|compra|costo|gasto|deduccion|salario|arrendamiento|honorario|servicio|comision;Pagos, compras, costos y gastos

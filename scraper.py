@@ -91,6 +91,12 @@ USER_AGENT = (
 #                   PDF. El match se resuelve en tres pases (igualdad exacta, prefijo,
 #                   subcadena) para que un encabezado como "FECHA DE RESOLUCION" gane
 #                   por prefijo en Fecha y no por subcadena en Resolucion.
+#   excluir       : por columna canónica, palabras que IMPIDEN mapear un encabezado a
+#                   ella (el PDF de proveedores trae "DIRECCION SECCIONAL QUE PROFIERE LA
+#                   RESOLUCION", que por subcadena caía en Resolucion).
+#   con_digito    : por columna canónica, mínimo de valores no vacíos que deben tener
+#                   algún dígito; si no se cumple, la extracción se rechaza (una columna
+#                   corrida se ve igual de bien que una correcta).
 #   requeridas    : columnas que deben reconocerse para aceptar una fila de encabezado.
 #                   Además se exige mapear >= 60% de `columnas`, para que una fila de
 #                   datos con subcadenas casuales no pase por encabezado.
@@ -110,10 +116,13 @@ FUENTES = [
         "keywords": {
             "NIT": ["nit", "identificacion", "documento", "cedula"],
             "Razon_Social": ["razon", "nombre", "social", "contribuyente", "proveedor"],
-            "Resolucion": ["resolucion", "acto"],
+            # "resoluci": pdfplumber lee la Ó de "N° RESOLUCIÓN" como U+FFFD ("n resoluci n")
+            "Resolucion": ["resolucion", "resoluci", "acto"],
             "Fecha": ["fecha", "ano", "vigencia"],
             "Estado": ["estado", "observacion", "situacion"],
         },
+        "excluir": {"Resolucion": ["seccional", "profiere"]},
+        "con_digito": {"Resolucion": 0.8},
         "requeridas": ["NIT", "Razon_Social"],
         "col_id": "NIT",
         "min_filas": 5,
@@ -338,7 +347,8 @@ def _norm(s: str) -> str:
 
 
 def _mapear_encabezado(headers: list[str], keywords: dict[str, list[str]],
-                       requeridas: list[str], columnas: list[str]) -> dict[int, str] | None:
+                       requeridas: list[str], columnas: list[str],
+                       excluir: dict[str, list[str]] | None = None) -> dict[int, str] | None:
     """Devuelve {indice_columna -> nombre_canonico} si la fila parece un encabezado real.
 
     El match se resuelve en tres pases con prioridad decreciente — igualdad exacta,
@@ -359,6 +369,8 @@ def _mapear_encabezado(headers: list[str], keywords: dict[str, list[str]],
                 continue
             for canon, kws in keywords.items():
                 if canon in usados:
+                    continue
+                if any(x in h for x in (excluir or {}).get(canon, [])):
                     continue
                 hit = False
                 for kw in kws:
@@ -420,7 +432,8 @@ def extraer_tabla(pdf_bytes: bytes, fuente: dict) -> list[dict]:
                 inicio = 0
                 for hi in range(min(5, len(tabla))):
                     posible = _mapear_encabezado(
-                        [_limpiar(c) for c in tabla[hi]], keywords, requeridas, columnas
+                        [_limpiar(c) for c in tabla[hi]], keywords, requeridas, columnas,
+                        fuente.get("excluir"),
                     )
                     if posible:
                         if mapeo_global is not None and posible != mapeo_global:
@@ -501,6 +514,17 @@ def validar(registros: list[dict], fuente: dict) -> None:
             f"Solo {ratio:.0%} de las filas tienen '{col_id}' plausible "
             f"(mínimo {min_ratio:.0%}). Se conserva la versión anterior."
         )
+
+    for col, minimo in fuente.get("con_digito", {}).items():
+        vals = [r.get(col, "") for r in registros if r.get(col, "")]
+        if not vals:
+            raise ScraperError(f"La columna '{col}' quedó vacía. Se conserva la versión anterior.")
+        r_dig = sum(1 for v in vals if re.search(r"\d", v)) / len(vals)
+        if r_dig < minimo:
+            raise ScraperError(
+                f"Solo {r_dig:.0%} de los valores de '{col}' tienen algún dígito "
+                f"(mínimo {minimo:.0%}): la columna parece corrida. Se conserva la versión anterior."
+            )
 
     # Validación con memoria: una caída fuerte frente a la corrida anterior sugiere un
     # PDF truncado o un enlace que apunta a otro documento. Si la reducción es legítima

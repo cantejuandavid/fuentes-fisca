@@ -463,28 +463,6 @@
   },
   {
     "No": "35",
-    "Nombre": "MARIO ORJUELA ARGUELLO",
-    "Cedula": "93.291.761",
-    "Inscripcion_Profesional": "196469-T",
-    "Resolucion": "T-000-1705 del 13 de febrero de 2025",
-    "Sancion": "SUSPENSIÓN (12) MESES",
-    "Fecha_Ejecutoria": "19/09/2025",
-    "Vencimiento": "19/09/2026",
-    "Autoridad": "JCC"
-  },
-  {
-    "No": "36",
-    "Nombre": "JESÚS ALBERTO RODRÍGUEZ FRANCO",
-    "Cedula": "19.416.566",
-    "Inscripcion_Profesional": "56031-T",
-    "Resolucion": "T-000-1705 del 13 de febrero de 2025",
-    "Sancion": "SUSPENSIÓN (12) MESES",
-    "Fecha_Ejecutoria": "19/09/2025",
-    "Vencimiento": "19/09/2026",
-    "Autoridad": "JCC"
-  },
-  {
-    "No": "37",
     "Nombre": "SANDRA MILENA TRUJILLO RÍOS",
     "Cedula": "35250450",
     "Inscripcion_Profesional": "169768-T",
@@ -495,7 +473,7 @@
     "Autoridad": "JCC"
   },
   {
-    "No": "38",
+    "No": "36",
     "Nombre": "GLORIA ESPERANZA NIÑO SANCHEZ",
     "Cedula": "52503548",
     "Inscripcion_Profesional": "203419-T",
@@ -506,7 +484,7 @@
     "Autoridad": "JCC"
   },
   {
-    "No": "39",
+    "No": "37",
     "Nombre": "JUAN FELIPE MEJÍA CADAVID",
     "Cedula": "15446573",
     "Inscripcion_Profesional": "139559-T",
@@ -514,6 +492,39 @@
     "Sancion": "SUSPENSIÓN (3) MESES",
     "Fecha_Ejecutoria": "17/06/2026",
     "Vencimiento": "17/09/2026",
+    "Autoridad": "JCC"
+  },
+  {
+    "No": "38",
+    "Nombre": "JOSÉ DARÍO RESTREPO MARTÍNEZ",
+    "Cedula": "10.185.308",
+    "Inscripcion_Profesional": "120289-T",
+    "Resolucion": "T-000-1768 del 23 de octubre de 2025",
+    "Sancion": "SUSPENSIÓN DE DOCE (12) MESES",
+    "Fecha_Ejecutoria": "18/09/2026",
+    "Vencimiento": "18/09/2027",
+    "Autoridad": "JCC"
+  },
+  {
+    "No": "39",
+    "Nombre": "DINA LISSET ARIAS PÉREZ",
+    "Cedula": "43755901",
+    "Inscripcion_Profesional": "168247-T",
+    "Resolucion": "T-063-2026 del 27 de agosto de 2026",
+    "Sancion": "SUSPENSIÓN DE SEIS (6) MESES",
+    "Fecha_Ejecutoria": "17/09/2026",
+    "Vencimiento": "17/03/2027",
+    "Autoridad": "JCC"
+  },
+  {
+    "No": "40",
+    "Nombre": "MIGUEL ÁNGEL PRIETO CANTE",
+    "Cedula": "14322443",
+    "Inscripcion_Profesional": "113338-T",
+    "Resolucion": "T-018-2026 del 26 del mes de marzo de 2026",
+    "Sancion": "SUSPENSIÓN DE (3) MESES",
+    "Fecha_Ejecutoria": "1/10/2026",
+    "Vencimiento": "1/01/2027",
     "Autoridad": "JCC"
   }
 ]

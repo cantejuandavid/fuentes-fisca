@@ -127,6 +127,9 @@ FUENTES = [
         "col_id": "NIT",
         "min_filas": 5,
         "min_id_ratio": 0.5,
+        # Calificados que NO figuran en el PDF publicado por la DIAN y se agregan a mano tras cotejar
+        # la lista con otra fuente de la entidad (2026-10-09). Se suman DESPUES de validar el PDF.
+        "complemento": "proveedores_ficticios_complemento.csv",
     },
     {
         "nombre": "Contadores sancionados por la DIAN",
@@ -545,6 +548,48 @@ def validar(registros: list[dict], fuente: dict) -> None:
 # Paso 5: escribir salidas (atómico y solo si algo cambió)
 # ----------------------------------------------------------------------------
 
+def _solo_digitos(v: str) -> str:
+    return re.sub(r"\D", "", str(v or "")).lstrip("0")
+
+
+def aplicar_complemento(registros: list[dict], fuente: dict) -> list[dict]:
+    """Agrega las filas del complemento manual cuyo NIT no esté ya en lo extraído del PDF.
+
+    El scraper reescribe el CSV desde el PDF en cada corrida: una fila agregada a mano en el CSV se
+    perdería. Las del complemento viven en su propio archivo y se suman aquí. Si la DIAN publica
+    después una de ellas, gana el PDF y el log avisa que ya se puede quitar del complemento.
+    El NIT se compara sin puntos ni ceros a la izquierda, y también sin el último dígito (DV).
+    """
+    nombre_csv = fuente.get("complemento")
+    if not nombre_csv:
+        return registros
+    ruta = ROOT / nombre_csv
+    if not ruta.exists():
+        log.warning("[%s] No existe el complemento %s.", fuente["nombre"], nombre_csv)
+        return registros
+    col_id = fuente["col_id"]
+    ids = set()
+    for r in registros:
+        d = _solo_digitos(r.get(col_id, ""))
+        if d:
+            ids.add(d)
+            ids.add(d[:-1])
+    filas = list(csv.DictReader(io.StringIO(ruta.read_text(encoding="utf-8-sig")), delimiter=";"))
+    agregadas = 0
+    for f in filas:
+        d = _solo_digitos(f.get(col_id, ""))
+        if not d:
+            continue
+        if d in ids or d[:-1] in ids:
+            log.info("[%s] %s ya figura en el PDF: se puede quitar de %s.", fuente["nombre"], d, nombre_csv)
+            continue
+        registros.append({c: (f.get(c) or "").strip() for c in fuente["columnas"]})
+        ids.add(d)
+        agregadas += 1
+    log.info("[%s] Complemento manual: %d fila(s) agregada(s) de %s.", fuente["nombre"], agregadas, nombre_csv)
+    return registros
+
+
 def _csv_str(registros: list[dict], columnas: list[str]) -> str:
     """Serializa los registros a CSV (separador ';', salto '\\n' determinista)."""
     buf = io.StringIO()
@@ -631,6 +676,7 @@ def procesar_fuente(fuente: dict, url: str | None) -> str:
         pdf = descargar_pdf(url)
         registros = extraer_tabla(pdf, fuente)
         validar(registros, fuente)
+        registros = aplicar_complemento(registros, fuente)
         cambio = escribir_salidas(registros, url, fuente)
         log.info("[%s] %s (%d registros).",
                  nombre, "ACTUALIZADO" if cambio else "sin cambios", len(registros))

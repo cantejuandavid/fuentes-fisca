@@ -2411,7 +2411,7 @@
     "NIT": "900830090",
     "Razon_Social": "SOLUCIONES TECNOLOGICAS EMPRESARIALES STE S A S",
     "Resolucion": "60000665",
-    "Fecha": "10/02/0002",
+    "Fecha": "5/10/2022",
     "Estado": ""
   },
   {
@@ -2446,7 +2446,7 @@
     "NIT": "901261607",
     "Razon_Social": "DISTRICONSTRUCCIONES NOVA S.A.S",
     "Resolucion": "6004917",
-    "Fecha": "20/02/0002",
+    "Fecha": "2/06/2022",
     "Estado": ""
   },
   {
@@ -3423,6 +3423,27 @@
     "Estado": ""
   },
   {
+    "NIT": "901520574",
+    "Razon_Social": "COMERCIALIZADORA LA ESPERANZA DUAL SAS",
+    "Resolucion": "2026032060000142",
+    "Fecha": "06/05/2026",
+    "Estado": ""
+  },
+  {
+    "NIT": "901423897",
+    "Razon_Social": "DISTRINEXO SAS",
+    "Resolucion": "2026032060000116",
+    "Fecha": "15/04/2026",
+    "Estado": ""
+  },
+  {
+    "NIT": "901427896",
+    "Razon_Social": "MULTI-TOUCHH S.A.S",
+    "Resolucion": "2026032060000158",
+    "Fecha": "13/05/2026",
+    "Estado": ""
+  },
+  {
     "NIT": "13540355",
     "Razon_Social": "DAVID JULIÁN SUÁREZ ROCHA",
     "Resolucion": "900001",
@@ -4015,6 +4036,20 @@
     "Razon_Social": "RECICLEMOS SANTANDER SAS",
     "Resolucion": "2025004060000604",
     "Fecha": "30/10/2025",
+    "Estado": ""
+  },
+  {
+    "NIT": "901420823",
+    "Razon_Social": "RECUPERADORA DANIELA DUARTE SAS",
+    "Resolucion": "2025004060000470",
+    "Fecha": "27/08/2025",
+    "Estado": ""
+  },
+  {
+    "NIT": "901049446",
+    "Razon_Social": "GRUPO MOVIL SANTANDER S.A.S",
+    "Resolucion": "2026004060000155",
+    "Fecha": "29/05/2026",
     "Estado": ""
   },
   {
@@ -4627,6 +4662,13 @@
     "Estado": ""
   },
   {
+    "NIT": "901608913",
+    "Razon_Social": "SUPER COMERCIAL S.A.S",
+    "Resolucion": "2026007060000042",
+    "Fecha": "10/06/2026",
+    "Estado": ""
+  },
+  {
     "NIT": "800032918",
     "Razon_Social": "COMERCIALIZADORA MARVIA SAS EN LIQUIDACIÓN",
     "Resolucion": "609",
@@ -4666,6 +4708,13 @@
     "Razon_Social": "FERRETERIA Y DEPOSITO LA CENTRAL SAS",
     "Resolucion": "2024008060000052",
     "Fecha": "13/06/2024",
+    "Estado": ""
+  },
+  {
+    "NIT": "901675223",
+    "Razon_Social": "JP TRANSCARB SAS",
+    "Resolucion": "2025008060000036",
+    "Fecha": "23/12/2025",
     "Estado": ""
   },
   {
@@ -5502,13 +5551,6 @@
     "Estado": ""
   },
   {
-    "NIT": "71681447",
-    "Razon_Social": "JOHN JAIME IRAL MESA",
-    "Resolucion": "416",
-    "Fecha": "10/03/2020",
-    "Estado": ""
-  },
-  {
     "NIT": "900653303",
     "Razon_Social": "FUNDACION PARA EL ESTUDIO, EL MEDIO AMBIENTE, LA ACCION SOCIAL Y EL DEPORTE",
     "Resolucion": "463",
@@ -6283,6 +6325,13 @@
     "Razon_Social": "LOGIACTION S.A.S.",
     "Resolucion": "2026011060000288",
     "Fecha": "7/05/2026",
+    "Estado": ""
+  },
+  {
+    "NIT": "901375938",
+    "Razon_Social": "COMERCIALIZADORA TEXTIGOMEZ S.A.S",
+    "Resolucion": "2026011060000351",
+    "Fecha": "9/06/2026",
     "Estado": ""
   },
   {
@@ -7658,6 +7707,13 @@
     "Estado": "El estado del RUT cambió a activo en 27/02/2025"
   },
   {
+    "NIT": "71681447",
+    "Razon_Social": "JOHN JAIME IRAL MESA",
+    "Resolucion": "416",
+    "Fecha": "10/03/2020",
+    "Estado": "Se levantó la condición de proveedor ficticio mediante el Auto 2237 del 14 de agosto de 2025"
+  },
+  {
     "NIT": "83092120",
     "Razon_Social": "VARGAS ROJAS HENRY MAURICIO",
     "Resolucion": "132012012000005",
@@ -7746,13 +7802,6 @@
     "Razon_Social": "INVERCOM F&M LTDA",
     "Resolucion": "202503806000448",
     "Fecha": "12/11/2025",
-    "Estado": "No figura en el PDF de la DIAN: agregado a mano el 2026-10-09"
-  },
-  {
-    "NIT": "901375938",
-    "Razon_Social": "COMERCIALIZADORA TEXTIGOMEZ S.A.S",
-    "Resolucion": "2026011060000351",
-    "Fecha": "9/06/2026",
     "Estado": "No figura en el PDF de la DIAN: agregado a mano el 2026-10-09"
   }
 ]

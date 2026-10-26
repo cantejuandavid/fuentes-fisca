@@ -1,0 +1,148 @@
+FORMULARIO;DISENO;DESDE;HASTA;GRUPO;SUBGRUPO
+110;A;30;32;Datos informativos;
+110;A;33;43;Patrimonio;
+110;A;44;54;Ingresos;
+110;A;55;60;Costos y deducciones;
+110;A;61;62;ESAL (R.T.E.);
+110;A;63;70;Renta;
+110;A;71;74;Renta;Rentas líquidas gravables
+110;A;75;78;Ganancias ocasionales;
+110;A;79;93;Liquidación privada;
+110;A;94;96;Liquidación privada;Retenciones
+110;A;97;101;Liquidación privada;
+110;E;33;35;Datos informativos;
+110;E;36;46;Patrimonio;
+110;E;47;61;Ingresos;
+110;E;62;67;Costos y deducciones;
+110;E;68;69;ESAL (R.T.E.);
+110;E;70;79;Renta;
+110;E;80;85;Ganancias ocasionales;
+110;E;86;91;Liquidación privada;Impuesto sobre las rentas líquidas gravables
+110;E;92;102;Liquidación privada;
+110;E;103;105;Liquidación privada;Retenciones
+110;E;106;106;Liquidación privada;
+110;E;107;109;Liquidación privada;Sobretasa instituciones financieras
+110;E;110;113;Liquidación privada;
+110;D;33;35;Datos informativos;
+110;D;36;46;Patrimonio;
+110;D;47;61;Ingresos;
+110;D;62;67;Costos y deducciones;
+110;D;68;69;ESAL (R.T.E.);
+110;D;70;79;Renta;
+110;D;80;83;Ganancias ocasionales;
+110;D;84;90;Liquidación privada;Impuesto sobre las rentas líquidas gravables
+110;D;91;104;Liquidación privada;
+110;D;105;107;Liquidación privada;Retenciones
+110;D;108;114;Liquidación privada;
+210;A;29;31;Patrimonio;
+210;A;32;37;Rentas de trabajo;
+210;A;38;42;Rentas de pensiones;
+210;A;43;53;Rentas de capital;
+210;A;54;66;Rentas no laborales;
+210;A;67;74;Rentas por dividendos y participaciones;
+210;A;75;76;Renta;
+210;A;77;80;Ganancia ocasional;
+210;A;81;85;Liquidación privada;Impuesto sobre las rentas líquidas cedulares
+210;A;86;88;Liquidación privada;
+210;A;89;92;Liquidación privada;Descuentos
+210;A;93;104;Liquidación privada;
+210;E;29;31;Patrimonio;
+210;E;32;34;Cédula general;Rentas de trabajo
+210;E;35;37;Cédula general;Rentas de trabajo › Rentas exentas
+210;E;38;40;Cédula general;Rentas de trabajo › Deducciones imputables
+210;E;41;42;Cédula general;Rentas de trabajo
+210;E;43;46;Cédula general;Rentas de trabajo por honorarios o servicios personales con costos
+210;E;47;49;Cédula general;Rentas de trabajo por honorarios o servicios personales con costos › Rentas exentas
+210;E;50;52;Cédula general;Rentas de trabajo por honorarios o servicios personales con costos › Deducciones imputables
+210;E;53;57;Cédula general;Rentas de trabajo por honorarios o servicios personales con costos
+210;E;58;62;Cédula general;Rentas de capital
+210;E;63;65;Cédula general;Rentas de capital › Rentas exentas
+210;E;66;68;Cédula general;Rentas de capital › Deducciones imputables
+210;E;69;73;Cédula general;Rentas de capital
+210;E;74;79;Cédula general;Rentas no laborales
+210;E;80;82;Cédula general;Rentas no laborales › Rentas exentas
+210;E;83;85;Cédula general;Rentas no laborales › Deducciones imputables
+210;E;86;90;Cédula general;Rentas no laborales
+210;E;91;98;Cédula general;
+210;E;99;103;Cédula de pensiones;
+210;E;104;110;Cédula de dividendos y participaciones;
+210;E;111;116;Ganancias ocasionales;
+210;E;117;122;Liquidación privada;Impuesto sobre las rentas líquidas gravables
+210;E;123;126;Liquidación privada;Descuentos tributarios
+210;E;127;134;Liquidación privada;
+210;C;29;31;Patrimonio;
+210;C;32;34;Cédula general;Rentas de trabajo
+210;C;35;37;Cédula general;Rentas de trabajo › Rentas exentas
+210;C;38;40;Cédula general;Rentas de trabajo › Deducciones imputables
+210;C;41;42;Cédula general;Rentas de trabajo
+210;C;43;46;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria
+210;C;47;49;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria › Rentas exentas
+210;C;50;52;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria › Deducciones imputables
+210;C;53;57;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria
+210;C;58;62;Cédula general;Rentas de capital
+210;C;63;65;Cédula general;Rentas de capital › Rentas exentas
+210;C;66;68;Cédula general;Rentas de capital › Deducciones imputables
+210;C;69;73;Cédula general;Rentas de capital
+210;C;74;79;Cédula general;Rentas no laborales
+210;C;80;82;Cédula general;Rentas no laborales › Rentas exentas
+210;C;83;85;Cédula general;Rentas no laborales › Deducciones imputables
+210;C;86;90;Cédula general;Rentas no laborales
+210;C;91;98;Cédula general;
+210;C;99;103;Cédula de pensiones;
+210;C;104;110;Cédula de dividendos y participaciones;
+210;C;112;115;Ganancias ocasionales;
+210;C;116;121;Liquidación privada;Impuesto sobre las rentas líquidas gravables
+210;C;122;125;Liquidación privada;Descuentos tributarios
+210;C;126;133;Liquidación privada;
+210;D;29;31;Patrimonio;
+210;D;32;34;Cédula general;Rentas de trabajo
+210;D;35;37;Cédula general;Rentas de trabajo › Rentas exentas
+210;D;38;40;Cédula general;Rentas de trabajo › Deducciones imputables
+210;D;41;42;Cédula general;Rentas de trabajo
+210;D;43;46;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria
+210;D;47;49;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria › Rentas exentas
+210;D;50;52;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria › Deducciones imputables
+210;D;53;57;Cédula general;Rentas de trabajo sin relación laboral o legal y reglamentaria
+210;D;58;62;Cédula general;Rentas de capital
+210;D;63;65;Cédula general;Rentas de capital › Rentas exentas
+210;D;66;68;Cédula general;Rentas de capital › Deducciones imputables
+210;D;69;73;Cédula general;Rentas de capital
+210;D;74;79;Cédula general;Rentas no laborales
+210;D;80;82;Cédula general;Rentas no laborales › Rentas exentas
+210;D;83;85;Cédula general;Rentas no laborales › Deducciones imputables
+210;D;86;90;Cédula general;Rentas no laborales
+210;D;91;98;Cédula general;
+210;D;99;103;Cédula de pensiones;
+210;D;104;110;Cédula de dividendos y participaciones;
+210;D;112;115;Ganancias ocasionales;
+210;D;116;121;Liquidación privada;Impuesto sobre las rentas líquidas gravables
+210;D;122;125;Liquidación privada;Descuentos tributarios
+210;D;126;133;Liquidación privada;
+300;U;27;43;Ingresos;
+300;U;44;49;Compras;Importación
+300;U;50;54;Compras;Nacionales
+300;U;55;57;Compras;
+300;U;58;67;Liquidación privada;Impuesto generado
+300;U;68;81;Liquidación privada;Impuesto descontable
+300;U;82;89;Liquidación privada;
+300;U;90;93;Control de saldos;
+350;A;27;41;Renta y complementario;
+350;A;42;49;Renta y complementario;Autorretenciones
+350;A;50;51;Renta y complementario;Pagos o abonos al exterior
+350;A;52;66;Renta y complementario;
+350;A;67;74;Renta y complementario;Autorretenciones
+350;A;75;76;Renta y complementario;Pagos o abonos al exterior
+350;A;77;78;Renta y complementario;
+350;A;79;82;Retenciones practicadas por otros impuestos;A título de IVA
+350;A;83;84;Retenciones practicadas por otros impuestos;
+350;A;85;87;Total;
+350;B;29;54;Renta y complementario;A personas jurídicas
+350;B;55;58;Renta y complementario;A personas jurídicas › Pagos al exterior
+350;B;59;76;Renta y complementario;A personas jurídicas › Autorretenciones
+350;B;77;108;Renta y complementario;A personas naturales
+350;B;109;112;Renta y complementario;A personas naturales › Pagos al exterior
+350;B;113;128;Renta y complementario;A personas naturales › Autorretenciones
+350;B;129;130;Renta y complementario;
+350;B;131;134;Retenciones practicadas por otros impuestos;A título de IVA
+350;B;135;135;Retenciones practicadas por otros impuestos;
+350;B;136;138;Total;

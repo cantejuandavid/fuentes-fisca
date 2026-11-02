@@ -45,28 +45,6 @@
   },
   {
     "No": "5",
-    "Nombre": "CLARA XIMENA CANTOR RODRIGUEZ",
-    "Cedula": "49.778.228",
-    "Inscripcion_Profesional": "223111-T",
-    "Resolucion": "1836",
-    "Sancion": "DOCE (12) MESES",
-    "Fecha_Ejecutoria": "20/10/2025",
-    "Vencimiento": "20/10/2026",
-    "Autoridad": "DIAN"
-  },
-  {
-    "No": "6",
-    "Nombre": "CAROLINA GARCÍA ÁLVAREZ",
-    "Cedula": "63.526.970",
-    "Inscripcion_Profesional": "188678-T",
-    "Resolucion": "1853",
-    "Sancion": "DOCE (12) MESES",
-    "Fecha_Ejecutoria": "22/10/2025",
-    "Vencimiento": "22/10/2026",
-    "Autoridad": "DIAN"
-  },
-  {
-    "No": "7",
     "Nombre": "YESID LEONARDO JIMENEZ HERRERA",
     "Cedula": "1.098.662.944",
     "Inscripcion_Profesional": "264301-T",
@@ -77,7 +55,7 @@
     "Autoridad": "DIAN"
   },
   {
-    "No": "8",
+    "No": "6",
     "Nombre": "CLAUDIA PATRICIA OLIVAR CAMARGO",
     "Cedula": "28.338.897",
     "Inscripcion_Profesional": "193321-T",
@@ -463,39 +441,6 @@
   },
   {
     "No": "35",
-    "Nombre": "SANDRA MILENA TRUJILLO RÍOS",
-    "Cedula": "35250450",
-    "Inscripcion_Profesional": "169768-T",
-    "Resolucion": "T-000-000-1752 del 28 del mes de agosto de 2025",
-    "Sancion": "SUSPENSIÓN (6) MESES",
-    "Fecha_Ejecutoria": "9/04/2026",
-    "Vencimiento": "9/10/2026",
-    "Autoridad": "JCC"
-  },
-  {
-    "No": "36",
-    "Nombre": "GLORIA ESPERANZA NIÑO SANCHEZ",
-    "Cedula": "52503548",
-    "Inscripcion_Profesional": "203419-T",
-    "Resolucion": "T-015-2026 del 26 del mes de marzo de 2026",
-    "Sancion": "SUSPENSIÓN (6) MESES",
-    "Fecha_Ejecutoria": "16/04/2026",
-    "Vencimiento": "16/10/2026",
-    "Autoridad": "JCC"
-  },
-  {
-    "No": "37",
-    "Nombre": "JUAN FELIPE MEJÍA CADAVID",
-    "Cedula": "15446573",
-    "Inscripcion_Profesional": "139559-T",
-    "Resolucion": "T-003-2026 del 12 del mes de febrero de 2026",
-    "Sancion": "SUSPENSIÓN (3) MESES",
-    "Fecha_Ejecutoria": "17/06/2026",
-    "Vencimiento": "17/09/2026",
-    "Autoridad": "JCC"
-  },
-  {
-    "No": "38",
     "Nombre": "JOSÉ DARÍO RESTREPO MARTÍNEZ",
     "Cedula": "10.185.308",
     "Inscripcion_Profesional": "120289-T",
@@ -506,7 +451,7 @@
     "Autoridad": "JCC"
   },
   {
-    "No": "39",
+    "No": "36",
     "Nombre": "DINA LISSET ARIAS PÉREZ",
     "Cedula": "43755901",
     "Inscripcion_Profesional": "168247-T",
@@ -517,7 +462,7 @@
     "Autoridad": "JCC"
   },
   {
-    "No": "40",
+    "No": "37",
     "Nombre": "MIGUEL ÁNGEL PRIETO CANTE",
     "Cedula": "14322443",
     "Inscripcion_Profesional": "113338-T",
